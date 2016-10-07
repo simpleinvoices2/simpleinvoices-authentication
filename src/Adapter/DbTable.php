@@ -31,12 +31,12 @@ class DbTable extends AbstractAdapter
     /**
      * @var string
      */
-    protected $table;
+    protected $tableName;
     
     public function __construct(AdapterInterface $adapter, $table = 'users')
     {
-        $this->adapter = $adapter;
-        $this->table   = $table;
+        $this->adapter     = $adapter;
+        $this->tableName   = $table;
     }
     
     /**
@@ -47,6 +47,7 @@ class DbTable extends AbstractAdapter
      */
     public function authenticate()
     {
+        $this->authenticateSetup();
         $dbSelect         = $this->authenticateCreateSelect();   
         $resultIdentities = $this->authenticateQuerySelect($dbSelect);
         
@@ -90,7 +91,7 @@ class DbTable extends AbstractAdapter
     {
         $identity = $this->getIdentity();
     
-        $select = new Select( $this->table );
+        $select = new Select( $this->tableName );
     
         // By email or username...
         if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
@@ -99,12 +100,13 @@ class DbTable extends AbstractAdapter
             $select->where(['username' => $identity]);
         }
     
-        // Password and active user...
+        // active user...
         $select->where([
-            'password' => $this->getCredential(),
             'active'   => true,
         ]);
     
+        // NOTE: Password is not set as we have to use 'password_verify'.
+        
         return $select;
     }
     
@@ -112,13 +114,13 @@ class DbTable extends AbstractAdapter
      * This method accepts a Zend\Db\Sql\Select object and
      * performs a query against the database with that object.
      *
-     * @param  Sql\Select $dbSelect
+     * @param  Select $dbSelect
      * @throws Exception\RuntimeException when an invalid select object is encountered
      * @return array
      */
-    protected function authenticateQuerySelect(Sql\Select $dbSelect)
+    protected function authenticateQuerySelect(Select $dbSelect)
     {
-        $sql = new Sql\Sql($this->zendDb);
+        $sql = new Sql($this->adapter);
         $statement = $sql->prepareStatementForSqlObject($dbSelect);
         try {
             $result = $statement->execute();
@@ -130,6 +132,8 @@ class DbTable extends AbstractAdapter
                     $row['zend_auth_credential_match'] = $row['ZEND_AUTH_CREDENTIAL_MATCH'];
                     unset($row['ZEND_AUTH_CREDENTIAL_MATCH']);
                 }
+                
+                // Verify the password
                 $resultIdentities[] = $row;
             }
         } catch (\Exception $e) {
@@ -142,6 +146,61 @@ class DbTable extends AbstractAdapter
             );
         }
         return $resultIdentities;
+    }
+    
+    /**
+     * This method abstracts the steps involved with making sure that 
+     * this adapter was indeed setup properly with all
+     * required pieces of information.
+     *
+     * @throws Exception\RuntimeException in the event that setup was not done properly
+     * @return bool
+     */
+    protected function authenticateSetup()
+    {
+        $exception = null;
+    
+        if ($this->tableName == '') {
+            $exception = 'A table must be supplied for the DbTable authentication adapter.';
+        } elseif ($this->identity == '') {
+            $exception = 'A value for the identity was not provided prior to authentication with DbTable.';
+        } elseif ($this->credential === null) {
+            $exception = 'A credential value was not provided prior to authentication with DbTable.';
+        }
+    
+        if (null !== $exception) {
+            throw new Exception\RuntimeException($exception);
+        }
+    
+        $this->authenticateResultInfo = [
+            'code'     => AuthenticationResult::FAILURE,
+            'identity' => $this->identity,
+            'messages' => []
+        ];
+    
+        return true;
+    }
+    
+    /**
+     * This method attempts to validate that the record in the resultset is 
+     * indeed a record that matched the identity provided to this adapter.
+     *
+     * @param  array $resultIdentity
+     * @return AuthenticationResult
+     */
+    protected function authenticateValidateResult($resultIdentity)
+    {
+        if (!password_verify($this->credential, $resultIdentity['password'])) {
+            $this->authenticateResultInfo['code']       = AuthenticationResult::FAILURE_CREDENTIAL_INVALID;
+            $this->authenticateResultInfo['messages'][] = 'Supplied credential is invalid.';
+            return $this->authenticateCreateAuthResult();
+        }
+        
+        $this->resultRow = $resultIdentity;
+        
+        $this->authenticateResultInfo['code']       = AuthenticationResult::SUCCESS;
+        $this->authenticateResultInfo['messages'][] = 'Authentication successful.';
+        return $this->authenticateCreateAuthResult();
     }
     
     /**

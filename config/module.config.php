@@ -8,7 +8,6 @@
 namespace SimpleInvoices\Authentication;
 
 use Zend\Router\Http\Literal;
-use Zend\ServiceManager\Factory\InvokableFactory;
 use Zend\Session\Storage\SessionArrayStorage;
 
 return [
@@ -38,7 +37,7 @@ return [
     ],
     'controllers' => [
         'factories' => [
-            Controller\AuthenticationController::class => InvokableFactory::class,
+            Controller\AuthenticationController::class => Service\AuthenticationControllerFactory::class,
         ],
     ],
     'listeners' => [
