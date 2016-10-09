@@ -9,6 +9,7 @@ namespace SimpleInvoices\Authentication;
 
 use Zend\Authentication\Adapter\AdapterInterface;
 use Zend\EventManager\Event;
+use Zend\Authentication\AuthenticationServiceInterface;
 
 class AuthenticationEvent extends Event
 {
@@ -22,6 +23,11 @@ class AuthenticationEvent extends Event
     protected $adapter;
     
     /**
+     * @var AuthenticationServiceInterface
+     */
+    protected $authenticationService = null;
+    
+    /**
      * Returns the authentication adapter.
      * 
      * @return \Zend\Authentication\Adapter\AdapterInterface
@@ -29,6 +35,16 @@ class AuthenticationEvent extends Event
     public function getAdapter()
     {
         return $this->adapter;
+    }
+    
+    /**
+     * Get authentication service instance
+     *
+     * @return AuthenticationServiceInterface
+     */
+    public function getAuthenticationService()
+    {
+        return $this->authenticationService;
     }
     
     /**
@@ -44,4 +60,16 @@ class AuthenticationEvent extends Event
         return $this;
     }
     
+    /**
+     * Set authentication service instance
+     *
+     * @param  AuthenticationServiceInterface $authenticationService
+     * @return AuthenticationEvent
+     */
+    public function setAuthenticationService(AuthenticationServiceInterface $authenticationService)
+    {
+        $this->setParam('authentication_service', $authenticationService);
+        $this->authenticationService = $authenticationService;
+        return $this;
+    }
 }

@@ -65,10 +65,10 @@ class AuthenticationService extends BaseAuthenticationService
             $event = new AuthenticationEvent();
             $event->setTarget($this);
             $event->setAdapter($adapter);
+            $event->setParam('authenticate_result', $result);
             
             if ($result->isValid()) {
                 $event->setName(AuthenticationEvent::EVENT_AUTHENTICATE_SUCCESS);    
-                $event->setParam('authenticate_result', $result);
             } else {
                 $event->setName(AuthenticationEvent::EVENT_AUTHENTICATE_ERROR);
             }
