@@ -16,6 +16,7 @@ class AuthenticationEvent extends Event
     const EVENT_AUTHENTICATE         = 'siAuth.authenticate';
     const EVENT_AUTHENTICATE_SUCCESS = 'siAuth.authenticate.success';
     const EVENT_AUTHENTICATE_ERROR   = 'siAuth.authenticate.error';
+    const EVENT_AUTHENTICATE_SQL     = 'siAuth.authenticate.sql';
     
     /**
      * @var AdapterInterface

@@ -29,6 +29,7 @@ Name                          | Constant                                        
 `siAuth.authenticate`         | `AuthenticationEvent::EVENT_AUTHENTICATE`         | Event triggered when 'SimpleInvoices\Authentication\AuthenticationService::authenticate()` has been called.
 `siAuth.authenticate.success` | `AuthenticationEvent::EVENT_AUTHENTICATE_SUCCESS` | Event triggered in case of a valid authentication attempt.
 `siAuth.authenticate.error`   | `AuthenticationEvent::EVENT_AUTHENTICATE_ERROR`   | Event triggered in case of an invalid authentication attempt.
+`siAuth.authenticate.sql`     | `AuthenticationEvent::EVENT_AUTHENTICATE_SQL`     | Event triggeres when the select query has been built.
 
 The following sections provide more detail on each event.
 
@@ -77,3 +78,22 @@ This events includes the authentication result (`Zend\Authentication\Results`)
 Parameter             | Description
 ----------------------|------------------------------------------
 `authenticate_result` | Instance of `Zend\Authentication\Result`
+
+
+## `AuthenticationEvent::EVENT_AUTHENTICATE_SQL` ("siAuth.authenticate.sql")
+
+### Triggered By
+
+This event is triggered by the following classes:
+
+Class                                           | In Method
+------------------------------------------------|----------------
+`SimpleInvoices\Authentication\Adapter\DbTable` | `authenticate`
+
+### Extra Parameters Set
+
+This events includes the Select statement (`Zend\Db\Sql\Select`)
+
+Parameter | Description
+----------|------------------------------------------
+`select`  | Instance of `Zend\Db\Sql\Select` containing the Select statement for authentication.

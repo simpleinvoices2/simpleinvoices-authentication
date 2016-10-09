@@ -12,14 +12,26 @@ use Zend\Db\Adapter\AdapterInterface;
 use Zend\Db\Sql\Select;
 use Zend\Db\Sql\Sql;
 use Zend\Authentication\Result as AuthenticationResult;
+use Zend\EventManager\EventManagerInterface;
+use SimpleInvoices\Authentication\AuthenticationEvent;
 
-class DbTable extends AbstractAdapter
+class DbTable extends AbstractAdapter implements EventManagerAwareAdapterInterface
 {
     /**
      * 
      * @var AdapterInterface
      */
     protected $adapter;
+    
+    /**
+     * @var AuthenticationEvent
+     */
+    protected $event;
+    
+    /**
+     * @var EventManagerInterface
+     */
+    protected $events;
     
     /**
      * $authenticateResultInfo
@@ -48,7 +60,16 @@ class DbTable extends AbstractAdapter
     public function authenticate()
     {
         $this->authenticateSetup();
-        $dbSelect         = $this->authenticateCreateSelect();   
+        $dbSelect         = $this->authenticateCreateSelect();
+        
+        // trigger an event to allow customization of the SQL query
+        if ($this->events instanceof EventManagerInterface) {
+            $event = clone $this->event;
+            $event->setName(AuthenticationEvent::EVENT_AUTHENTICATE_SQL);
+            $event->setParam('select', $dbSelect);
+            $this->events->triggerEvent($event);
+        }
+        
         $resultIdentities = $this->authenticateQuerySelect($dbSelect);
         
         if (($authResult = $this->authenticateValidateResultSet($resultIdentities)) instanceof AuthenticationResult) {
@@ -223,5 +244,28 @@ class DbTable extends AbstractAdapter
         }
     
         return true;
+    }
+    
+    /**
+     * Inject an AuthenticationEvent instance.
+     * 
+     * @return DbTable
+     */
+    public function setEvent(AuthenticationEvent $event)
+    {
+        $this->event = $event;
+        return $this;
+    }
+    
+    /**
+     * Inject an EventManager instance
+     *
+     * @param  EventManagerInterface $eventManager
+     * @return DbTable
+     */
+    public function setEventManager(EventManagerInterface $eventManager)
+    {
+        $this->events = $eventManager;
+        return $this;
     }
 }

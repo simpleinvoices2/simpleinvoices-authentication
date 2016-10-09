@@ -11,6 +11,7 @@ use Zend\Authentication\Adapter;
 use Zend\Authentication\Storage;
 use Zend\EventManager\EventManagerInterface;
 use Zend\Authentication\AuthenticationService as BaseAuthenticationService;
+use SimpleInvoices\Authentication\Adapter\EventManagerAwareAdapterInterface;
 
 class AuthenticationService extends BaseAuthenticationService
 {
@@ -56,6 +57,12 @@ class AuthenticationService extends BaseAuthenticationService
             $event->setTarget($this);
             $event->setAdapter($adapter);
             $this->events->triggerEvent($event);
+            
+            // if the adapter is aware of events pass them through
+            if ($adapter instanceof EventManagerAwareAdapterInterface) {
+                $adapter->setEventManager($this->events);
+                $adapter->setEvent($event);
+            }
         }
         
         $result = parent::authenticate($adapter);
