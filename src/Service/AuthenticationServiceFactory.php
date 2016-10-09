@@ -29,7 +29,7 @@ class AuthenticationServiceFactory implements FactoryInterface
     {
         $adapter = $container->get(AdapterInterface::class);
         $dbTable = new DbTable($adapter, 'users'); // 'si_user', 'email', 'password', 'MD5(?) AND enabled=1');
-        $storage = new Session();
+        $storage = new Session('si');
         
         $eventManager = null;
         if ($container->has('SimpleInvoices\EventManager')) {
