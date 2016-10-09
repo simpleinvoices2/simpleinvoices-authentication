@@ -10,16 +10,16 @@ namespace SimpleInvoices\Authentication\Controller;
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\View\Model\ViewModel;
 use SimpleInvoices\Authentication\Form\LoginForm;
-use Zend\Authentication\AuthenticationService;
+use Zend\Authentication\AuthenticationServiceInterface;
 
 class AuthenticationController extends AbstractActionController
 {
     /**
-     * @var AuthenticationService
+     * @var AuthenticationServiceInterface
      */
     protected $authenticationService;
     
-    public function __construct(AuthenticationService $authenticationService)
+    public function __construct(AuthenticationServiceInterface $authenticationService)
     {
         $this->authenticationService = $authenticationService;
     }

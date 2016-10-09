@@ -10,10 +10,10 @@ namespace SimpleInvoices\Authentication\Service;
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
-use Zend\Authentication\AuthenticationService;
 use Zend\Authentication\Storage\Session;
 use Zend\Db\Adapter\AdapterInterface;
 use SimpleInvoices\Authentication\Adapter\DbTable;
+use SimpleInvoices\Authentication\AuthenticationService;
 
 class AuthenticationServiceFactory implements FactoryInterface
 {
@@ -30,7 +30,15 @@ class AuthenticationServiceFactory implements FactoryInterface
         $adapter = $container->get(AdapterInterface::class);
         $dbTable = new DbTable($adapter, 'users'); // 'si_user', 'email', 'password', 'MD5(?) AND enabled=1');
         $storage = new Session();
-        return new AuthenticationService($storage, $dbTable);
+        
+        $eventManager = null;
+        if ($container->has('SimpleInvoices\EventManager')) {
+            $eventManager = $container->get('SimpleInvoices\EventManager');
+        } elseif($container->has('EventManager')) {
+            $eventManager = $container->get('EventManager');
+        }
+        
+        return new AuthenticationService($storage, $dbTable, $eventManager);
     }
 
     /**
